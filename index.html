@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#14181F" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="TruxFlow" />
+<title>TruxFlow — Load & Pay Manager</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="favicon.png" />
+
+<script>
+  // ---- Stuck on "Loading…"? Repair it. ----
+  // The app sets window.__truxflowReady once it has opened (or shows the sign-in
+  // screen). If that hasn't happened after a while, something on this phone is
+  // stuck — usually old offline copies. Repair removes the offline helper and its
+  // stored copies (never your data, which lives on the server; you stay signed in)
+  // and reloads. It runs by itself once; after that the button is there.
+  async function tfRepair() {
+    try { sessionStorage.setItem("tf-repaired", String(Date.now())); } catch (e) {}
+    try {
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      if (window.caches) {
+        const names = await caches.keys();
+        await Promise.all(names.map((n) => caches.delete(n)));
+      }
+    } catch (e) {}
+    location.reload();
+  }
+  setTimeout(() => {
+    if (window.__truxflowReady) return;
+    const bar = document.getElementById("tf-repair");
+    bar.style.display = "flex";
+    const t = setInterval(() => { if (window.__truxflowReady) { bar.style.display = "none"; clearInterval(t); } }, 500);
+  }, 12000);
+  setTimeout(() => {
+    if (window.__truxflowReady) return;
+    let last = 0;
+    try { last = Number(sessionStorage.getItem("tf-repaired") || 0); } catch (e) {}
+    if (Date.now() - last > 10 * 60000) tfRepair(); // automatic, at most once per 10 min
+  }, 25000);
+
+</script>
+
+<!-- Libraries at exact versions, so an outside release can never change the app
+     without us testing it first. -->
+<!-- React (no build step needed) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@8.0.7/babel.min.js"></script>
+
+<!-- Excel/CSV import support -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Supabase (cloud login + cross-device sync) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+
+<style>
+  html, body { margin: 0; padding: 0; background: #14181F; overscroll-behavior: none; }
+  #root { min-height: 100vh; }
+  #tf-repair { position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 28px); display: none; justify-content: center; z-index: 999; font-family: Inter, -apple-system, sans-serif; }
+  #tf-repair button { background: #1D2430; color: #E8E6E1; border: 1px solid #303A4A; border-radius: 999px; padding: 10px 18px; font-size: 13.5px; font-weight: 600; font-family: inherit; }
+  #tf-repair button b { color: #F2A93B; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="tf-repair"><button type="button" onclick="tfRepair()">Taking too long? <b>Repair &amp; reload</b></button></div>
+
+<!-- The app itself, transpiled in-browser by Babel (see README for upgrading to a real build step later) -->
+<script type="text/babel" data-type="module" src="app.js?v=301"></script>
+
+<script>
+  // Offline helper: always checks the server for a newer version of itself.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js", { updateViaCache: "none" })
+        .then((reg) => reg.update().catch(() => {}))
+        .catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
