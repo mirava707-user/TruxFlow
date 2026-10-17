@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TruxFlow has moved</title>
+<script>
+  // TruxFlow moved to truxflow.net. Forward everyone (same page + same link details)
+  // and remove the old offline helper from this address.
+  (function () {
+    var path = location.pathname.replace(/^\/TruxFlow\/?/i, "/");
+    var target = "https://truxflow.net" + path + location.search + location.hash;
+    try {
+      if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(function (r) { r.forEach(function (x) { x.unregister(); }); });
+      if (window.caches) caches.keys().then(function (k) { k.forEach(function (n) { caches.delete(n); }); });
+    } catch (e) {}
+    location.replace(target);
+  })();
+</script>
+<style>body{margin:0;background:#14181F;color:#E8E6E1;font-family:-apple-system,Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:24px;box-sizing:border-box}a{color:#4A90D9;font-weight:700}</style>
+</head>
+<body>
+<div><h2>TruxFlow has moved</h2><p>Opening <a href="https://truxflow.net/">truxflow.net</a>…</p><p style="color:#8A93A3;font-size:14px">Add the new address to your Home Screen and delete the old icon.</p></div>
+</body>
+</html>
